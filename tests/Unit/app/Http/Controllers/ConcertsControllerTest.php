@@ -42,4 +42,16 @@ class ConcertsControllerTest extends TestCase
 
         $this->assertEquals($concert->ticket_price_in_dollars, 200.10);
     }
+
+    /** @test */
+    public function can_order_concert_tickets(): void
+    {
+        /** @var Concert $concert */
+        $concert = factory(Concert::class)->create();
+
+        $order = $concert->orderTickets('jane@example.com', 3);
+
+        $this->assertEquals('jane@example.com', $order->email);
+        $this->assertEquals('3', $order->tickets()->count());
+    }
 }
