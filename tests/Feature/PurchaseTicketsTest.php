@@ -107,6 +107,24 @@ final class PurchaseTicketsTest extends TestCase
         $response->assertJsonValidationErrors('ticket_quantity');
     }
 
+    /** @test */
+    public function order_is_not_created_if_payment_fails(): void
+    {
+        $concert = factory(Concert::class)->create([
+            'ticket_price' => 3250,
+        ]);
+
+        $response = $this->orderTickets($concert, [
+            'email'           => 'john@example.com',
+            'ticket_quantity' => 3,
+            'payment_token'   => 'invalid-payment-token',
+        ]);
+
+        $response->assertStatus(JsonResponse::HTTP_UNPROCESSABLE_ENTITY);
+        $order = $concert->orders()->where('email', 'john@example.com')->first();
+        $this->assertNull($order);
+    }
+
     private function orderTickets($concert, array $params): TestResponse
     {
         return $this->json('POST', "/concerts/{$concert->id}/orders", $params);
