@@ -9,8 +9,18 @@ class Order extends Model
 {
     protected $guarded = [];
 
-    public function tickets() : HasMany
+    public function tickets(): HasMany
     {
         return $this->hasMany(Ticket::class);
+    }
+
+    public function cancel(): void
+    {
+        /** @var Ticket $ticket */
+        foreach ($this->tickets()->get() as $ticket) {
+            $ticket->release();
+        }
+
+        $this->delete();
     }
 }
