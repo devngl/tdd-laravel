@@ -53,8 +53,7 @@ final class ConcertTest extends TestCase
     public function can_order_concert_tickets(): void
     {
         /** @var Concert $concert */
-        $concert = factory(Concert::class)->create();
-        $concert->addTickets(3);
+        $concert = factory(Concert::class)->create()->addTickets(3);
 
         $order = $concert->orderTickets('jane@example.com', 3);
 
@@ -66,9 +65,7 @@ final class ConcertTest extends TestCase
     public function can_add_tickets(): void
     {
         /** @var Concert $concert */
-        $concert = factory(Concert::class)->create();
-
-        $concert->addTickets(50);
+        $concert = factory(Concert::class)->create()->addTickets(50);
 
         $this->assertEquals(50, $concert->ticketsRemaining());
     }
@@ -76,8 +73,7 @@ final class ConcertTest extends TestCase
     /** @test */
     public function tickets_remaining_does_not_include_tickets_associated_with_an_order(): void
     {
-        $concert = factory(Concert::class)->create();
-        $concert->addTickets(50);
+        $concert = factory(Concert::class)->create()->addTickets(50);
         $concert->orderTickets('jane@example.com', 30);
 
         $this->assertEquals(20, $concert->ticketsRemaining());
@@ -87,8 +83,7 @@ final class ConcertTest extends TestCase
     public function trying_to_purchase_more_tickets_than_remain_throws_an_exception(): void
     {
         $this->expectException(NotEnoughTicketsException::class);
-        $concert = factory(Concert::class)->create();
-        $concert->addTickets(10);
+        $concert = factory(Concert::class)->create()->addTickets(10);
 
         try {
             $concert->orderTickets('jane@example.com', 11);
@@ -104,8 +99,7 @@ final class ConcertTest extends TestCase
     public function cannot_order_tickets_that_have_already_been_purchased(): void
     {
         $this->expectException(NotEnoughTicketsException::class);
-        $concert = factory(Concert::class)->create();
-        $concert->addTickets(10);
+        $concert = factory(Concert::class)->create()->addTickets(10);
         $concert->orderTickets('jane@example.com', 8);
 
         try {

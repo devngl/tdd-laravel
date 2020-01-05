@@ -24,3 +24,4 @@ class Order extends Model
         $this->delete();
     }
 }
+

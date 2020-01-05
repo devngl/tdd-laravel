@@ -57,11 +57,13 @@ class Concert extends Model
         return $order;
     }
 
-    public function addTickets(int $quantity): void
+    public function addTickets(int $quantity): Concert
     {
         foreach (range(1, $quantity) as $i) {
             $this->tickets()->create([]);
         }
+
+        return $this;
     }
 
     public function ticketsRemaining(): int
