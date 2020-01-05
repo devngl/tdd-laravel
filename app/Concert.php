@@ -37,6 +37,16 @@ class Concert extends Model
         return $this->hasMany(Ticket::class);
     }
 
+    public function hasOrderFor(string $email): Bool
+    {
+        return $this->orders()->where('email', $email)->exists();
+    }
+
+    public function ordersFor(string $email)
+    {
+        return $this->orders()->where('email', $email)->get();
+    }
+
     public function orderTickets(string $email, int $ticketQuantity): Order
     {
         $tickets = $this->tickets()->available()->take($ticketQuantity)->get();

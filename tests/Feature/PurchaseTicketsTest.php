@@ -8,6 +8,7 @@ use App\Billing\FakePaymentGateway;
 use App\Billing\PaymentGateway;
 use App\Concert;
 use App\Exceptions\CannotPurchaseUnpublishedConcerts;
+use App\Order;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\TestResponse;
@@ -34,6 +35,7 @@ final class PurchaseTicketsTest extends TestCase
     {
         $this->withoutExceptionHandling();
 
+        /** @var Concert $concert */
         $concert = factory(Concert::class)->states('published')->create([
             'ticket_price' => 3250,
         ])->addTickets(3);
@@ -43,22 +45,18 @@ final class PurchaseTicketsTest extends TestCase
             'ticket_quantity' => 3,
             'payment_token'   => $this->paymentGateway->getValidTestToken(),
         ]);
+
         $storeResponse->assertStatus(JsonResponse::HTTP_CREATED);
 
         $this->assertEquals(9750, $this->paymentGateway->totalCharges());
-
-        $this->assertTrue($concert->orders->contains(static function ($order) {
-            return $order->email === 'john@example.com';
-        }));
-
-        $order = $concert->orders->where('email', 'john@example.com')->first();
-        $this->assertNotNull($order);
-        $this->assertEquals(3, $order->tickets->count());
+        $this->assertTrue($concert->hasOrderFor('john@example.com'));
+        $this->assertEquals(3, $concert->ordersFor('john@example.com')->first()->ticketQuantity());
     }
 
     /** @test */
     public function email_is_required_to_purchase_tickets(): void
     {
+        /** @var Concert $concert */
         $concert = factory(Concert::class)->create();
 
         $storeResponse = $this->orderTickets($concert, [
@@ -72,6 +70,7 @@ final class PurchaseTicketsTest extends TestCase
     /** @test */
     public function payment_token_is_required(): void
     {
+        /** @var Concert $concert */
         $concert = factory(Concert::class)->create();
 
         $response = $this->orderTickets($concert, [
@@ -85,6 +84,7 @@ final class PurchaseTicketsTest extends TestCase
     /** @test */
     public function ticket_quantity_is_required(): void
     {
+        /** @var Concert $concert */
         $concert = factory(Concert::class)->create();
 
         $response = $this->orderTickets($concert, [
@@ -98,6 +98,7 @@ final class PurchaseTicketsTest extends TestCase
     /** @test */
     public function ticket_quantity_must_be_greater_than_zero(): void
     {
+        /** @var Concert $concert */
         $concert = factory(Concert::class)->create();
 
         $response = $this->orderTickets($concert, [
@@ -112,6 +113,7 @@ final class PurchaseTicketsTest extends TestCase
     /** @test */
     public function order_is_not_created_if_payment_fails(): void
     {
+        /** @var Concert $concert */
         $concert = factory(Concert::class)->states('published')->create([
             'ticket_price' => 3250,
         ])->addTickets(3);
@@ -123,13 +125,13 @@ final class PurchaseTicketsTest extends TestCase
         ]);
 
         $response->assertStatus(JsonResponse::HTTP_UNPROCESSABLE_ENTITY);
-        $order = $concert->orders()->where('email', 'john@example.com')->first();
-        $this->assertNull($order);
+        $this->assertFalse($concert->hasOrderFor('john@example.com'));
     }
 
     /** @test */
     public function cannot_purchase_tickets_to_an_unpublished_concert(): void
     {
+        /** @var Concert $concert */
         $concert = factory(Concert::class)->states('unpublished')->create()->addTickets(3);
 
         $response = $this->orderTickets($concert, [
@@ -147,6 +149,7 @@ final class PurchaseTicketsTest extends TestCase
     /** @test */
     public function cannot_purchase_more_tickets_than_remain(): void
     {
+        /** @var Concert $concert */
         $concert = factory(Concert::class)->states('published')->create()->addTickets(50);
 
         $response = $this->orderTickets($concert, [
@@ -156,8 +159,7 @@ final class PurchaseTicketsTest extends TestCase
         ]);
 
         $response->assertStatus(Response::HTTP_UNPROCESSABLE_ENTITY);
-        $order = $concert->orders()->where('email', 'john@example.com')->first();
-        $this->assertNull($order);
+        $this->assertFalse($concert->hasOrderFor('john@example.com'));
         $this->assertEquals(0, $this->paymentGateway->totalCharges());
         $this->assertEquals(50, $concert->ticketsRemaining());
     }
