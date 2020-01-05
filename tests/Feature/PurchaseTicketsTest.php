@@ -8,7 +8,6 @@ use App\Billing\FakePaymentGateway;
 use App\Billing\PaymentGateway;
 use App\Concert;
 use App\Exceptions\CannotPurchaseUnpublishedConcerts;
-use App\Order;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\TestResponse;
@@ -47,6 +46,12 @@ final class PurchaseTicketsTest extends TestCase
         ]);
 
         $storeResponse->assertStatus(JsonResponse::HTTP_CREATED);
+
+        $storeResponse->assertJson([
+            'email'           => 'john@example.com',
+            'ticket_quantity' => 3,
+            'amount'          => 9750,
+        ]);
 
         $this->assertEquals(9750, $this->paymentGateway->totalCharges());
         $this->assertTrue($concert->hasOrderFor('john@example.com'));

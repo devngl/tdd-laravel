@@ -6,7 +6,6 @@ use App\Billing\PaymentFailedException;
 use App\Billing\PaymentGateway;
 use App\Concert;
 use App\Exceptions\CannotPurchaseUnpublishedConcerts;
-use App\Order;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -44,6 +43,6 @@ class ConcertOrdersController extends Controller
             throw $paymentFailedException;
         }
 
-        return new JsonResponse(null, JsonResponse::HTTP_CREATED);
+        return new JsonResponse($order, JsonResponse::HTTP_CREATED);
     }
 }
