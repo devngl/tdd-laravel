@@ -4,8 +4,10 @@ namespace App;
 
 use App\Exceptions\NotEnoughTicketsException;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Collection;
 
 class Concert extends Model
 {
@@ -27,9 +29,9 @@ class Concert extends Model
         return number_format($this->ticket_price / 100, 2);
     }
 
-    public function orders(): HasMany
+    public function orders(): BelongsToMany
     {
-        return $this->hasMany(Order::class);
+        return $this->belongsToMany(Order::class, 'tickets');
     }
 
     public function tickets(): HasMany
@@ -49,23 +51,10 @@ class Concert extends Model
 
     public function orderTickets(string $email, int $ticketQuantity): Order
     {
-        $tickets = $this->tickets()->available()->take($ticketQuantity)->get();
+        $tickets = $this->findTickets($ticketQuantity);
+        $reservation = new Reservation($tickets);
 
-        if ($tickets->count() < $ticketQuantity) {
-            throw new NotEnoughTicketsException(JsonResponse::HTTP_UNPROCESSABLE_ENTITY,
-                'Not enough tickets available for current order.');
-        }
-
-        $order = $this->orders()->create([
-            'email'  => $email,
-            'amount' => $ticketQuantity * $this->ticket_price,
-        ]);
-
-        foreach ($tickets as $ticket) {
-            $order->tickets()->save($ticket);
-        }
-
-        return $order;
+        return Order::forTickets($tickets, $email, $reservation->totalCost());
     }
 
     public function addTickets(int $quantity): Concert
@@ -80,5 +69,18 @@ class Concert extends Model
     public function ticketsRemaining(): int
     {
         return $this->tickets()->available()->count();
+    }
+
+    public function findTickets(int $ticketQuantity): Collection
+    {
+        /** @var Collection $tickets */
+        $tickets = $this->tickets()->available()->take($ticketQuantity)->get();
+
+        if ($tickets->count() < $ticketQuantity) {
+            throw new NotEnoughTicketsException(JsonResponse::HTTP_UNPROCESSABLE_ENTITY,
+                'Not enough tickets available for current order.');
+        }
+
+        return $tickets;
     }
 }

@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Billing\PaymentFailedException;
 use App\Billing\PaymentGateway;
 use App\Concert;
 use App\Exceptions\CannotPurchaseUnpublishedConcerts;
+use App\Order;
+use App\Reservation;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -32,16 +33,11 @@ class ConcertOrdersController extends Controller
         }
 
         $ticketQuantity = $request->get('ticket_quantity');
-        $amount         = $concert->ticket_price * $ticketQuantity;
+        $tickets        = $concert->findTickets($ticketQuantity);
+        $reservation    = new Reservation($tickets);
 
-        $order = null;
-        try {
-            $order = $concert->orderTickets($request->get('email'), $ticketQuantity);
-            $this->paymentGateway->charge($amount, $request->get('payment_token'));
-        } catch (PaymentFailedException $paymentFailedException) {
-            $order->cancel();
-            throw $paymentFailedException;
-        }
+        $this->paymentGateway->charge($reservation->totalCost(), $request->get('payment_token'));
+        $order = Order::forTickets($tickets, $request->get('email'), $reservation->totalCost());
 
         return new JsonResponse($order, JsonResponse::HTTP_CREATED);
     }
