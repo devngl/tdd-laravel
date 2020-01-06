@@ -6,8 +6,11 @@ namespace Tests\Unit\app;
 
 use App\Concert;
 use App\Order;
+use App\Reservation;
+use App\Ticket;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Collection;
 use Tests\TestCase;
 
 final class OrderTest extends TestCase

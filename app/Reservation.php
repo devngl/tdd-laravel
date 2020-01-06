@@ -10,10 +10,12 @@ final class Reservation
 {
     /** @var Collection|Ticket[] */
     private Collection $tickets;
+    private string $email;
 
-    public function __construct(Collection $tickets)
+    public function __construct(Collection $tickets, string $email)
     {
         $this->tickets = $tickets;
+        $this->email   = $email;
     }
 
     public function totalCost(): int
@@ -26,5 +28,20 @@ final class Reservation
         foreach ($this->tickets as $ticket) {
             $ticket->release();
         }
+    }
+
+    public function complete(): Order
+    {
+        return Order::forTickets($this->tickets(), $this->email(), $this->totalCost());
+    }
+
+    public function tickets(): Collection
+    {
+        return $this->tickets;
+    }
+
+    public function email()
+    {
+        return $this->email;
     }
 }
