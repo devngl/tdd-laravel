@@ -12,3 +12,9 @@ npm-debug.log
 yarn-error.log
 
 *.sqlite3
+
+public/css/
+
+public/js/
+
+public/mix-manifest.json
