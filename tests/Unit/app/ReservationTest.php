@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Tests\Unit\app;
 
+use App\Billing\FakePaymentGateway;
 use App\Concert;
 use App\Reservation;
 use App\Ticket;
@@ -84,12 +85,14 @@ final class ReservationTest extends TestCase
         /** @var Collection|Ticket[] $tickets */
         $tickets = factory(Ticket::class, 3)->create(['concert_id' => $concert->getKey()]);
 
-        $reservation = new Reservation($tickets, 'john@example.com');
+        $reservation    = new Reservation($tickets, 'john@example.com');
+        $paymentGateway = new FakePaymentGateway();
 
-        $order = $reservation->complete();
+        $order = $reservation->complete($paymentGateway, $paymentGateway->getValidTestToken());
 
         $this->assertEquals('john@example.com', $order->email);
         $this->assertEquals(3, $order->ticketQuantity());
         $this->assertEquals(3600, $order->amount);
+        $this->assertEquals(3600, $paymentGateway->totalCharges());
     }
 }

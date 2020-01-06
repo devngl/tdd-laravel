@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace App;
 
+use App\Billing\PaymentGateway;
 use Illuminate\Support\Collection;
 
 final class Reservation
@@ -30,8 +31,10 @@ final class Reservation
         }
     }
 
-    public function complete(): Order
+    public function complete(PaymentGateway $paymentGateway, string $paymentToken): Order
     {
+        $paymentGateway->charge($this->totalCost(), $paymentToken);
+
         return Order::forTickets($this->tickets(), $this->email(), $this->totalCost());
     }
 
