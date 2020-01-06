@@ -36,16 +36,6 @@ class Order extends Model
         return $this->belongsTo(Concert::class);
     }
 
-    public function cancel(): void
-    {
-        /** @var Ticket $ticket */
-        foreach ($this->tickets()->get() as $ticket) {
-            $ticket->release();
-        }
-
-        $this->delete();
-    }
-
     public function ticketQuantity(): int
     {
         return $this->tickets()->count();
