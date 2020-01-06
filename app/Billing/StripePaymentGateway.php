@@ -4,7 +4,9 @@ declare(strict_types = 1);
 
 namespace App\Billing;
 
+use Illuminate\Http\Response;
 use Stripe\Charge;
+use Stripe\Exception\InvalidRequestException;
 
 final class StripePaymentGateway implements PaymentGateway
 {
@@ -17,10 +19,14 @@ final class StripePaymentGateway implements PaymentGateway
 
     public function charge(int $amount, string $token): void
     {
-        Charge::create([
-            'amount'   => $amount,
-            'currency' => 'eur',
-            'source'   => $token,
-        ], ['api_key' => $this->apiKey]);
+        try {
+            Charge::create([
+                'amount'   => $amount,
+                'currency' => 'eur',
+                'source'   => $token,
+            ], ['api_key' => $this->apiKey]);
+        } catch (InvalidRequestException $e) {
+            throw new PaymentFailedException(Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
     }
 }

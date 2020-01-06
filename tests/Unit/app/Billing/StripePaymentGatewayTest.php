@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Tests\Unit\app\Billing;
 
+use App\Billing\PaymentFailedException;
 use App\Billing\StripePaymentGateway;
 use Illuminate\Support\Arr;
 use Stripe\Charge;
@@ -15,17 +16,37 @@ use Tests\TestCase;
  */
 final class StripePaymentGatewayTest extends TestCase
 {
+    private ?Charge $lastCharge;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->lastCharge = $this->lastCharge();
+    }
+
     /** @test */
     public function charges_with_a_valid_payment_token_are_successful(): void
     {
-        $lastCharge     = $this->lastCharge();
         $paymentGateway = new StripePaymentGateway((string)config('cashier.secret'));
         $paymentGateway->charge(50, $this->validToken());
 
-        $newCharges = $this->newCharges($lastCharge);
+        $newCharges = $this->newCharges();
 
         $this->assertCount(1, $newCharges);
         $this->assertEquals(50, Arr::first($newCharges)->amount);
+    }
+
+    /** @test */
+    public function charges_with_an_invalid_payment_token_fail(): void
+    {
+        $this->expectException(PaymentFailedException::class);
+        $paymentGateway = new StripePaymentGateway((string)config('cashier.secret'));
+        try {
+            $paymentGateway->charge(2500, 'invalid-payment-token');
+        } catch (PaymentFailedException $e) {
+            $this->assertCount(0, $this->newCharges());
+            throw $e;
+        }
     }
 
     private function lastCharge(): ?Charge
@@ -36,11 +57,11 @@ final class StripePaymentGatewayTest extends TestCase
         )['data']);
     }
 
-    private function newCharges(?Charge $lastCharge)
+    private function newCharges()
     {
         return Charge::all(
             [
-                'ending_before' => $lastCharge ? $lastCharge->id : null,
+                'ending_before' => $this->lastCharge ? $this->lastCharge->id : null,
             ],
             ['api_key' => config('cashier.secret')]
         )['data'];
