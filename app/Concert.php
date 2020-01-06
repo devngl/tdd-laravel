@@ -51,7 +51,7 @@ class Concert extends Model
 
     public function orderTickets(string $email, int $ticketQuantity): Order
     {
-        $tickets = $this->findTickets($ticketQuantity);
+        $tickets     = $this->findTickets($ticketQuantity);
         $reservation = new Reservation($tickets);
 
         return Order::forTickets($tickets, $email, $reservation->totalCost());
@@ -82,5 +82,10 @@ class Concert extends Model
         }
 
         return $tickets;
+    }
+
+    public function reserveTickets(int $quantity)
+    {
+        return $this->findTickets($quantity)->each(fn(Ticket $ticket) => $ticket->reserve());
     }
 }

@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Tests\Unit\app;
 
 use App\Concert;
+use App\Ticket;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -12,6 +13,18 @@ use Tests\TestCase;
 final class TicketTest extends TestCase
 {
     use DatabaseMigrations, RefreshDatabase;
+
+    /** @test */
+    public function a_ticket_can_be_reserved(): void
+    {
+        /** @var Ticket $ticket */
+        $ticket = factory(Ticket::class)->create();
+        $this->assertNull($ticket->reserved_at);
+
+        $ticket->reserve();
+
+        $this->assertNotNull($ticket->fresh()->reserved_at);
+    }
 
     /** @test */
     public function a_ticket_can_be_released(): void

@@ -8,6 +8,7 @@ use App\Billing\FakePaymentGateway;
 use App\Billing\PaymentGateway;
 use App\Concert;
 use App\Exceptions\CannotPurchaseUnpublishedConcerts;
+use App\Exceptions\NotEnoughTicketsException;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\TestResponse;
@@ -131,6 +132,7 @@ final class PurchaseTicketsTest extends TestCase
 
         $response->assertStatus(JsonResponse::HTTP_UNPROCESSABLE_ENTITY);
         $this->assertFalse($concert->hasOrderFor('john@example.com'));
+        $this->assertEquals(3, $concert->ticketsRemaining());
     }
 
     /** @test */
@@ -167,6 +169,41 @@ final class PurchaseTicketsTest extends TestCase
         $this->assertFalse($concert->hasOrderFor('john@example.com'));
         $this->assertEquals(0, $this->paymentGateway->totalCharges());
         $this->assertEquals(50, $concert->ticketsRemaining());
+    }
+
+    /** @test */
+    public function cannot_purchase_tickets_another_customer_is_already_trying_to_purchase(): void
+    {
+        $this->withoutExceptionHandling();
+
+        /** @var Concert $concert */
+        $concert = factory(Concert::class)->states('published')->create([
+            'ticket_price' => 1000,
+        ])->addTickets(3);
+
+        $this->paymentGateway->beforeFirstCharge(function (PaymentGateway $paymentGateway) use ($concert) {
+            $this->expectException(NotEnoughTicketsException::class);
+            try {
+                $this->orderTickets($concert, [
+                    'email'           => 'personB@example.com',
+                    'ticket_quantity' => 1,
+                    'payment_token'   => $paymentGateway->getValidTestToken(),
+                ]);
+            } catch (NotEnoughTicketsException $exception) {
+                $this->assertFalse($concert->hasOrderFor('personB@example.com'));
+                $this->assertEquals(0, $paymentGateway->totalCharges());
+                throw $exception;
+            }
+        });
+
+        $this->orderTickets($concert, [
+            'email'           => 'personA@example.com',
+            'ticket_quantity' => 3,
+            'payment_token'   => $this->paymentGateway->getValidTestToken(),
+        ]);
+        $this->assertEquals(3000, $this->paymentGateway->totalCharges());
+        $this->assertTrue($concert->hasOrderFor('personA@example.com'));
+        $this->assertEquals(3, $concert->ordersFor('personA@example.com')->first()->ticketQuantity());
     }
 
     private function orderTickets($concert, array $params): TestResponse
