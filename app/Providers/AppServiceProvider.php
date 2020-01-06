@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Billing\PaymentGateway;
+use App\Billing\StripePaymentGateway;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -13,7 +15,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        //
+        $this->app->bind(PaymentGateway::class, fn() => new StripePaymentGateway(config('cashier.secret')));
     }
 
     /**
