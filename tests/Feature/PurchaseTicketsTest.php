@@ -132,7 +132,7 @@ final class PurchaseTicketsTest extends TestCase
 
         $response->assertStatus(JsonResponse::HTTP_UNPROCESSABLE_ENTITY);
         $this->assertFalse($concert->hasOrderFor('john@example.com'));
-        $this->assertEquals(3, $concert->ticketsRemaining());
+        $this->assertEquals(3, $concert->fresh()->ticketsRemaining());
     }
 
     /** @test */
