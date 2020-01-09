@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Factory;
 $factory->define(Ticket::class, static function (Faker $faker) {
     return [
         'concert_id' => fn() => factory(Concert::class)->states('published')->create()->id,
+        'code'       => $faker->shuffleString('ABCDEFGHIJKL'),
     ];
 });
 

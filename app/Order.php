@@ -2,6 +2,7 @@
 
 namespace App;
 
+use App\Facades\OrderConfirmationNumber;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -15,8 +16,9 @@ class Order extends Model
     {
         /** @var self $order */
         $order = self::create([
-            'email'  => $email,
-            'amount' => $amount,
+            'email'               => $email,
+            'amount'              => $amount,
+            'confirmation_number' => OrderConfirmationNumber::generate(),
         ]);
 
         foreach ($tickets as $ticket) {
@@ -29,6 +31,11 @@ class Order extends Model
     public function tickets(): HasMany
     {
         return $this->hasMany(Ticket::class);
+    }
+
+    public static function findByConfirmationNumber(string $confirmationNumber): self
+    {
+        return self::where('confirmation_number', $confirmationNumber)->firstOrFail();
     }
 
     public function concert(): BelongsTo
@@ -44,9 +51,10 @@ class Order extends Model
     public function toArray()
     {
         return [
-            'email'           => $this->email,
-            'ticket_quantity' => $this->ticketQuantity(),
-            'amount'          => $this->amount,
+            'email'               => $this->email,
+            'ticket_quantity'     => $this->ticketQuantity(),
+            'amount'              => $this->amount,
+            'confirmation_number' => $this->confirmation_number,
         ];
     }
 }

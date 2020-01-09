@@ -1,6 +1,8 @@
 <?php
 
 use App\Concert;
+use App\Order;
+use App\Ticket;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 
@@ -13,7 +15,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
-        factory(Concert::class)->states('published')->create([
+        $concert = factory(Concert::class)->states('published')->create([
             'title' => 'The Red Chord',
             'subtitle' => 'with Animosity and Lethargy',
             'venue' => 'The Mosh Pit',
@@ -25,5 +27,20 @@ class DatabaseSeeder extends Seeder
             'ticket_price' => 3250,
             'additional_information' => 'This concert is 19+',
         ])->addTickets(10);
+
+        $order   = factory(Order::class)->create([
+            'confirmation_number' => 'ORDER_CONFIRMATION_1234',
+            'card_last_four'      => '1881',
+        ]);
+        $ticketA  = factory(Ticket::class)->create([
+            'code' => 'A',
+            'concert_id' => $concert->getKey(),
+            'order_id'   => $order->getKey(),
+        ]);
+        $ticketB  = factory(Ticket::class)->create([
+            'code' => 'B',
+            'concert_id' => $concert->getKey(),
+            'order_id'   => $order->getKey(),
+        ]);
     }
 }

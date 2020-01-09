@@ -9,11 +9,13 @@ use App\Billing\PaymentGateway;
 use App\Concert;
 use App\Exceptions\CannotPurchaseUnpublishedConcerts;
 use App\Exceptions\NotEnoughTicketsException;
+use App\OrderConfirmationNumberGenerator;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\TestResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
+use Mockery;
 use Tests\TestCase;
 
 final class PurchaseTicketsTest extends TestCase
@@ -35,6 +37,11 @@ final class PurchaseTicketsTest extends TestCase
     {
         $this->withoutExceptionHandling();
 
+        $orderConfirmationNumberGenerator = Mockery::mock(OrderConfirmationNumberGenerator::class, [
+           'generate' => 'ORDER_CONFIRMATION_1234',
+        ]);
+        $this->app->instance(OrderConfirmationNumberGenerator::class, $orderConfirmationNumberGenerator);
+
         /** @var Concert $concert */
         $concert = factory(Concert::class)->states('published')->create([
             'ticket_price' => 3250,
@@ -49,9 +56,10 @@ final class PurchaseTicketsTest extends TestCase
         $storeResponse->assertStatus(JsonResponse::HTTP_CREATED);
 
         $storeResponse->assertJson([
-            'email'           => 'john@example.com',
-            'ticket_quantity' => 3,
-            'amount'          => 9750,
+            'email'               => 'john@example.com',
+            'ticket_quantity'     => 3,
+            'amount'              => 9750,
+            'confirmation_number' => 'ORDER_CONFIRMATION_1234',
         ]);
 
         $this->assertEquals(9750, $this->paymentGateway->totalCharges());
