@@ -5,25 +5,33 @@ namespace App\Billing;
 use Closure;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 
 class FakePaymentGateway implements PaymentGateway
 {
+    public const TEST_CARD_NUMBER = '4242424242424242';
+
     private Collection $charges;
+    private Collection $tokens;
     private ?Closure $beforeFirstChargeCallback;
 
     public function __construct()
     {
         $this->charges = collect();
+        $this->tokens  = collect();
         /** @noinspection PropertyInitializationFlawsInspection */
         $this->beforeFirstChargeCallback = null;
     }
 
-    public function getValidTestToken(): string
+    public function getValidTestToken(string $cardNumber = null): string
     {
-        return 'valid-token';
+        $token                = 'fake-tok_'.Str::random(24);
+        $this->tokens[$token] = $cardNumber;
+
+        return $token;
     }
 
-    public function charge(int $amount, string $token): void
+    public function charge(int $amount, string $token): Charge
     {
         if ($this->beforeFirstChargeCallback !== null) {
             $callback                        = $this->beforeFirstChargeCallback;
@@ -31,16 +39,19 @@ class FakePaymentGateway implements PaymentGateway
             $callback($this);
         }
 
-        if ($token !== $this->getValidTestToken()) {
+        if (!$this->tokens->has($token)) {
             throw new PaymentFailedException(JsonResponse::HTTP_UNPROCESSABLE_ENTITY, 'Token is not valid');
         }
 
-        $this->charges[] = $amount;
+        return $this->charges[] = new Charge([
+            'amount'         => $amount,
+            'card_last_four' => substr($this->tokens[$token], -4),
+        ]);
     }
 
     public function totalCharges()
     {
-        return $this->charges->sum();
+        return $this->charges->map->amount()->sum();
     }
 
     public function beforeFirstCharge(Closure $callback): void

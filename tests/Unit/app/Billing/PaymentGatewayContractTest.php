@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\app\Billing;
 
+use App\Billing\Charge;
 use App\Billing\PaymentFailedException;
 use App\Billing\PaymentGateway;
 use Illuminate\Support\Collection;
@@ -16,11 +17,11 @@ trait PaymentGatewayContractTest
 
         /** @var Collection $newCharges */
         $newCharges = $paymentGateway->newChargesDuring(static function (PaymentGateway $paymentGateway) {
-            $paymentGateway->charge(50, $paymentGateway->getValidTestToken());
+            $paymentGateway->charge(50, $paymentGateway->getValidTestToken('4242424242424242'));
         });
 
         $this->assertCount(1, $newCharges);
-        $this->assertEquals(50, $newCharges->sum());
+        $this->assertEquals(50, $newCharges->map->amount()->sum());
     }
 
     /** @test */
@@ -38,7 +39,7 @@ trait PaymentGatewayContractTest
         });
 
         $this->assertCount(2, $newCharges);
-        $this->assertEquals([5000, 4000], $newCharges->all());
+        $this->assertEquals([5000, 4000], $newCharges->map->amount()->all());
     }
 
     /** @test */
@@ -56,5 +57,18 @@ trait PaymentGatewayContractTest
         });
 
         $this->assertCount(0, $newCharges);
+    }
+
+    /** @test */
+    public function can_get_details_about_a_successfull_charge(): void
+    {
+        /** @var PaymentGateway $paymentGateway */
+        $paymentGateway = $this->getPaymentGateway();
+
+        /** @var Charge $charge */
+        $charge = $paymentGateway->charge(2500, $paymentGateway->getValidTestToken($paymentGateway::TEST_CARD_NUMBER));
+
+        $this->assertEquals(substr($paymentGateway::TEST_CARD_NUMBER, -4), $charge->cardLastFour());
+        $this->assertEquals(2500, $charge->amount());
     }
 }
