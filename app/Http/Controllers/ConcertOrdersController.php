@@ -6,8 +6,10 @@ use App\Billing\PaymentFailedException;
 use App\Billing\PaymentGateway;
 use App\Concert;
 use App\Exceptions\CannotPurchaseUnpublishedConcerts;
+use App\Mail\OrderConfirmationEmail;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 class ConcertOrdersController extends Controller
 {
@@ -40,6 +42,9 @@ class ConcertOrdersController extends Controller
             $reservation->cancel();
             throw $e;
         }
+
+        Mail::to($order->email)
+            ->send(new OrderConfirmationEmail($order));
 
         return new JsonResponse($order, JsonResponse::HTTP_CREATED);
     }

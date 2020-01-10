@@ -11,13 +11,14 @@ use App\Exceptions\CannotPurchaseUnpublishedConcerts;
 use App\Exceptions\NotEnoughTicketsException;
 use App\Facades\OrderConfirmationNumber;
 use App\Facades\TicketCode;
-use App\OrderConfirmationNumberGenerator;
+use App\Mail\OrderConfirmationEmail;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\TestResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
-use Mockery;
+use Illuminate\Mail\Mailable;
+use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 final class PurchaseTicketsTest extends TestCase
@@ -32,6 +33,7 @@ final class PurchaseTicketsTest extends TestCase
 
         $this->paymentGateway = new FakePaymentGateway;
         $this->app->instance(PaymentGateway::class, $this->paymentGateway);
+        Mail::fake();
     }
 
     /** @test */
@@ -59,16 +61,23 @@ final class PurchaseTicketsTest extends TestCase
             'email'               => 'john@example.com',
             'amount'              => 9750,
             'confirmation_number' => 'ORDER_CONFIRMATION_1234',
-            'tickets' => [
+            'tickets'             => [
                 ['code' => 'TICKETCODE1'],
                 ['code' => 'TICKETCODE2'],
                 ['code' => 'TICKETCODE3'],
-            ]
+            ],
         ]);
 
         $this->assertEquals(9750, $this->paymentGateway->totalCharges());
         $this->assertTrue($concert->hasOrderFor('john@example.com'));
-        $this->assertEquals(3, $concert->ordersFor('john@example.com')->first()->ticketQuantity());
+
+        $order = $concert->ordersFor('john@example.com')->first();
+        $this->assertEquals(3, $order->ticketQuantity());
+
+        Mail::assertSent(OrderConfirmationEmail::class, static function (Mailable $mail) use ($order) {
+            return $mail->hasTo('john@example.com')
+                && $mail->order->id === $order->id;
+        });
     }
 
     /** @test */
