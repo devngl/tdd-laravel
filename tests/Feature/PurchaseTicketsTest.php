@@ -9,6 +9,8 @@ use App\Billing\PaymentGateway;
 use App\Concert;
 use App\Exceptions\CannotPurchaseUnpublishedConcerts;
 use App\Exceptions\NotEnoughTicketsException;
+use App\Facades\OrderConfirmationNumber;
+use App\Facades\TicketCode;
 use App\OrderConfirmationNumberGenerator;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -37,10 +39,8 @@ final class PurchaseTicketsTest extends TestCase
     {
         $this->withoutExceptionHandling();
 
-        $orderConfirmationNumberGenerator = Mockery::mock(OrderConfirmationNumberGenerator::class, [
-           'generate' => 'ORDER_CONFIRMATION_1234',
-        ]);
-        $this->app->instance(OrderConfirmationNumberGenerator::class, $orderConfirmationNumberGenerator);
+        OrderConfirmationNumber::shouldReceive('generate')->andReturn('ORDER_CONFIRMATION_1234');
+        TicketCode::shouldReceive('generateFor')->andReturn('TICKETCODE1', 'TICKETCODE2', 'TICKETCODE3');
 
         /** @var Concert $concert */
         $concert = factory(Concert::class)->states('published')->create([
@@ -57,9 +57,13 @@ final class PurchaseTicketsTest extends TestCase
 
         $storeResponse->assertJson([
             'email'               => 'john@example.com',
-            'ticket_quantity'     => 3,
             'amount'              => 9750,
             'confirmation_number' => 'ORDER_CONFIRMATION_1234',
+            'tickets' => [
+                ['code' => 'TICKETCODE1'],
+                ['code' => 'TICKETCODE2'],
+                ['code' => 'TICKETCODE3'],
+            ]
         ]);
 
         $this->assertEquals(9750, $this->paymentGateway->totalCharges());

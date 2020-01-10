@@ -7,7 +7,7 @@ namespace App\Facades;
 use App\OrderConfirmationNumberGenerator;
 use Illuminate\Support\Facades\Facade;
 
-final class OrderConfirmationNumber extends Facade
+class OrderConfirmationNumber extends Facade
 {
     protected static function getFacadeAccessor(): string
     {
