@@ -49,14 +49,6 @@ class Concert extends Model
         return $this->orders()->where('email', $email)->get();
     }
 
-    public function orderTickets(string $email, int $ticketQuantity): Order
-    {
-        $tickets     = $this->findTickets($ticketQuantity);
-        $reservation = new Reservation($tickets, $email);
-
-        return Order::forTickets($tickets, $email, $reservation->totalCost());
-    }
-
     public function addTickets(int $quantity): Concert
     {
         foreach (range(1, $quantity) as $i) {

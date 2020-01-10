@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 namespace Tests\Unit\app;
 
-use App\Concert;
+use App\Billing\Charge;
 use App\Order;
 use App\Ticket;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -17,19 +17,22 @@ final class OrderTest extends TestCase
     use DatabaseMigrations, RefreshDatabase;
 
     /** @test */
-    public function creating_an_order_from_tickets_email_and_amount(): void
+    public function creating_an_order_from_tickets_email_and_charge(): void
     {
-        /** @var Concert $concert */
-        $concert = factory(Concert::class)->state('published')->create()->addTickets(5);
-        $this->assertEquals(5, $concert->ticketsRemaining());
+        $tickets = factory(Ticket::class, 3)->create();
+
+        $charge = new Charge([
+            'amount'         => 3600,
+            'card_last_four' => '1234',
+        ]);
 
         /** @var Order $order */
-        $order = Order::forTickets($concert->findTickets(3), 'john@example.com', 3600);
+        $order = Order::forTickets($tickets, 'john@example.com', $charge);
 
         $this->assertEquals('john@example.com', $order->email);
         $this->assertEquals(3, $order->ticketQuantity());
         $this->assertEquals(3600, $order->amount);
-        $this->assertEquals(2, $concert->ticketsRemaining());
+        $this->assertEquals('1234', $order->card_last_four);
     }
 
     /** @test */
