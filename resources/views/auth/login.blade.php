@@ -27,7 +27,8 @@
                         </span>
                             <input type="password" name="password"
                                    autocomplete="current-password"
-                                   class="form-control" placeholder="Password">
+                                   class="form-control" placeholder="Password"
+                                   value="{{old('email')}}">
                         </div>
                     </div>
                     <button type="submit" class="btn btn-block btn-primary">Log in</button>
