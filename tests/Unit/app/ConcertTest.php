@@ -137,4 +137,15 @@ final class ConcertTest extends TestCase
             throw $e;
         }
     }
+
+    /** @test */
+    public function concerts_can_be_published(): void
+    {
+        /** @var Concert $concert */
+        $concert = factory(Concert::class)->state('unpublished')->create();
+        $this->assertFalse($concert->isPublished());
+
+        $concert->publish();
+        $this->assertTrue($concert->isPublished());
+    }
 }

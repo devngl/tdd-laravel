@@ -3,7 +3,9 @@
 namespace App;
 
 use App\Exceptions\NotEnoughTicketsException;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\JsonResponse;
@@ -37,6 +39,11 @@ class Concert extends Model
     public function tickets(): HasMany
     {
         return $this->hasMany(Ticket::class);
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 
     public function hasOrderFor(string $email): Bool
@@ -79,5 +86,15 @@ class Concert extends Model
     public function reserveTickets(int $quantity, string $email): Reservation
     {
         return new Reservation($this->findTickets($quantity)->each(fn(Ticket $ticket) => $ticket->reserve()), $email);
+    }
+
+    public function isPublished(): bool
+    {
+        return $this->published_at !== null;
+    }
+
+    public function publish(): void
+    {
+        $this->update(['published_at' => $this->freshTimestamp()]);
     }
 }

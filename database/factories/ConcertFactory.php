@@ -3,12 +3,14 @@
 /** @var Factory $factory */
 
 use App\Concert;
+use App\User;
 use Carbon\Carbon;
 use Faker\Generator as Faker;
 use Illuminate\Database\Eloquent\Factory;
 
 $factory->define(Concert::class, static function (Faker $faker) {
     return [
+        'user_id'                => fn() => factory(User::class)->create()->id,
         'title'                  => 'Example Band',
         'subtitle'               => 'with The Fake Openers',
         'date'                   => Carbon::parse('+2 weeks'),
