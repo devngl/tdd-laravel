@@ -49,7 +49,7 @@ final class AddConcertTest extends TestCase
 
             $this->assertTrue($concert->user->is($user));
 
-            $this->assertTrue($concert->isPublished());
+            $this->assertFalse($concert->isPublished());
 
             $this->assertEquals($validParams['title'], $concert->title);
             $this->assertEquals($validParams['subtitle'], $concert->subtitle);
@@ -62,7 +62,7 @@ final class AddConcertTest extends TestCase
             $this->assertEquals($validParams['zip'], $concert->zip);
             $this->assertEquals($validParams['ticket_price'] * 100, $concert->ticket_price);
             $this->assertEquals($validParams['ticket_quantity'], $concert->ticket_quantity);
-            $this->assertEquals($validParams['ticket_quantity'], $concert->ticketsRemaining());
+            $this->assertEquals(0, $concert->ticketsRemaining());
         });
     }
 
