@@ -19,6 +19,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 use Illuminate\Mail\Mailable;
 use Illuminate\Support\Facades\Mail;
+use Tests\Helpers\ConcertFactory;
 use Tests\TestCase;
 
 final class PurchaseTicketsTest extends TestCase
@@ -44,10 +45,7 @@ final class PurchaseTicketsTest extends TestCase
         OrderConfirmationNumber::shouldReceive('generate')->andReturn('ORDER_CONFIRMATION_1234');
         TicketCode::shouldReceive('generateFor')->andReturn('TICKETCODE1', 'TICKETCODE2', 'TICKETCODE3');
 
-        /** @var Concert $concert */
-        $concert = factory(Concert::class)->states('published')->create([
-            'ticket_price' => 3250,
-        ])->addTickets(3);
+        $concert = ConcertFactory::createPublished(['ticket_price' => 3250, 'ticket_quantity' => 3]);
 
         $storeResponse = $this->orderTickets($concert, [
             'email'           => 'john@example.com',

@@ -45,8 +45,7 @@ final class AddConcertTest extends TestCase
         $response    = $this->actingAs($user)->post('/backstage/concerts', $validParams);
 
         tap(Concert::first(), function (Concert $concert) use ($response, $validParams, $user) {
-            $response->assertStatus(302);
-            $response->assertRedirect("/concerts/{$concert->id}");
+            $response->assertRedirect('/backstage/concerts');
 
             $this->assertTrue($concert->user->is($user));
 
@@ -62,6 +61,7 @@ final class AddConcertTest extends TestCase
             $this->assertEquals($validParams['state'], $concert->state);
             $this->assertEquals($validParams['zip'], $concert->zip);
             $this->assertEquals($validParams['ticket_price'] * 100, $concert->ticket_price);
+            $this->assertEquals($validParams['ticket_quantity'], $concert->ticket_quantity);
             $this->assertEquals($validParams['ticket_quantity'], $concert->ticketsRemaining());
         });
     }
@@ -102,8 +102,7 @@ final class AddConcertTest extends TestCase
         $response = $this->actingAs($user)->post('/backstage/concerts', $this->validParams(['subtitle' => '']));
 
         tap(Concert::first(), function (Concert $concert) use ($response) {
-            $response->assertStatus(302);
-            $response->assertRedirect("/concerts/{$concert->id}");
+            $response->assertRedirect('/backstage/concerts');
             $this->assertNull($concert->subtitle);
         });
     }
@@ -119,8 +118,7 @@ final class AddConcertTest extends TestCase
         ]));
 
         tap(Concert::first(), function ($concert) use ($response) {
-            $response->assertStatus(302);
-            $response->assertRedirect("/concerts/{$concert->id}");
+            $response->assertRedirect('/backstage/concerts');
             $this->assertNull($concert->additional_information);
         });
     }

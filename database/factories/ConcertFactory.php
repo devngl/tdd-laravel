@@ -13,14 +13,15 @@ $factory->define(Concert::class, static function (Faker $faker) {
         'user_id'                => fn() => factory(User::class)->create()->id,
         'title'                  => 'Example Band',
         'subtitle'               => 'with The Fake Openers',
+        'additional_information' => 'Some sample additional information.',
         'date'                   => Carbon::parse('+2 weeks'),
-        'ticket_price'           => 2000,
         'venue'                  => 'The Example Theatre',
         'venue_address'          => '123 Example Lane',
         'city'                   => 'Fakeville',
         'state'                  => 'ON',
         'zip'                    => '90218',
-        'additional_information' => 'Some sample additional information.',
+        'ticket_price'           => 2000,
+        'ticket_quantity'        => 1,
     ];
 });
 
