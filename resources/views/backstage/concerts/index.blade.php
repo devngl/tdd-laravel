@@ -1,24 +1,6 @@
-@extends('layouts.master')
+@extends('layouts.backstage')
 
-@section('body')
-    <header>
-        <nav class="navbar p-xs-y-3">
-            <div class="container">
-                <div class="navbar-content">
-                    <div>
-                        <img src="/img/logo.svg" alt="TicketBeast" style="height: 2.5rem;">
-                    </div>
-                    <div>
-                        <form class="inline-block" action="{{ route('logout') }}" method="POST">
-                            {{ csrf_field() }}
-                            <button type="submit" class="link link-light">Log out</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </nav>
-    </header>
-
+@section('backstageContent')
     <div class="bg-light p-xs-y-4 border-b">
         <div class="container">
             <div class="flex-spaced flex-y-center">
@@ -51,8 +33,10 @@
                                         </p>
                                     </div>
                                     <div>
+                                        <a href="{{ route('backstage.published-concert-orders.index', $concert) }}"
+                                           class="btn btn-sm btn-secondary m-xs-r-2">Manage</a>
                                         <a href="{{ route('concerts.show', $concert) }}"
-                                           class="btn btn-sm btn-secondary">Get Ticket Link</a>
+                                           class="link-brand text-sm wt-medium">Public Link</a>
                                     </div>
                                 </div>
                             </div>
@@ -84,9 +68,8 @@
                                     <div>
                                         <a href="{{ route('backstage.concerts.edit', $concert) }}"
                                            class="btn btn-sm btn-secondary m-xs-r-2">Edit</a>
-
-                                        <form class="inline-block" method="POST"
-                                              action="{{ route('backstage.published-concerts.store') }}">
+                                        <form class="inline-block"
+                                              action="{{ route('backstage.published-concerts.store') }}" method="POST">
                                             {{ csrf_field() }}
                                             <input type="hidden" name="concert_id" value="{{ $concert->id }}">
                                             <button type="submit" class="btn btn-sm btn-primary">Publish</button>
@@ -100,11 +83,4 @@
             </div>
         </div>
     </div>
-
-
-    <footer class="p-xs-y-6 text-light-muted">
-        <div class="container">
-            <p class="text-center">&copy; TicketBeast {{ date('Y') }}</p>
-        </div>
-    </footer>
 @endsection

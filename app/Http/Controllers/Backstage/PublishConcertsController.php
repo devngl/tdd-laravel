@@ -14,6 +14,7 @@ final class PublishConcertsController
 {
     public function store(Request $request): RedirectResponse
     {
+        /** @var Concert $concert */
         $concert = Auth::user()->concerts()->findOrFail($request->get('concert_id'));
 
         abort_if($concert->isPublished(), Response::HTTP_UNPROCESSABLE_ENTITY);

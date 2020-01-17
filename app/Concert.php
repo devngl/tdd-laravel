@@ -3,7 +3,7 @@
 namespace App;
 
 use App\Exceptions\NotEnoughTicketsException;
-use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -31,9 +31,9 @@ class Concert extends Model
         return number_format($this->ticket_price / 100, 2);
     }
 
-    public function orders(): BelongsToMany
+    public function orders()
     {
-        return $this->belongsToMany(Order::class, 'tickets');
+        return Order::whereIn('id', $this->tickets()->pluck('order_id'));
     }
 
     public function tickets(): HasMany
@@ -70,6 +70,21 @@ class Concert extends Model
         return $this->tickets()->available()->count();
     }
 
+    public function ticketsSold()
+    {
+        return $this->tickets()->sold()->count();
+    }
+
+    public function totalTickets()
+    {
+        return $this->tickets()->count();
+    }
+
+    public function percentSoldOut()
+    {
+        return number_format(($this->ticketsSold() / $this->totalTickets()) * 100, 2);
+    }
+
     public function findTickets(int $ticketQuantity): Collection
     {
         /** @var Collection $tickets */
@@ -97,5 +112,15 @@ class Concert extends Model
     {
         $this->update(['published_at' => $this->freshTimestamp()]);
         $this->addTickets($this->ticket_quantity);
+    }
+
+    public function scopePublished(Builder $query)
+    {
+        return $query->whereNotNull('published_at');
+    }
+
+    public function revenueInDollars(): float
+    {
+        return $this->orders()->sum('amount') / 100;
     }
 }

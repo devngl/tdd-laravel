@@ -1,24 +1,6 @@
-@extends('layouts.master')
+@extends('layouts.backstage')
 
-@section('body')
-    <header>
-        <nav class="navbar p-xs-y-3">
-            <div class="container">
-                <div class="navbar-content">
-                    <div>
-                        <img src="/img/logo.svg" alt="TicketBeast" style="height: 2.5rem;">
-                    </div>
-                    <div>
-                        <form class="inline-block" action="{{ route('logout') }}" method="POST">
-                            {{ csrf_field() }}
-                            <button type="submit" class="link link-light">Log out</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </nav>
-    </header>
-
+@section('backstageContent')
     <div class="bg-light p-xs-y-4 border-b">
         <div class="container">
             <h1 class="text-lg">Edit concert</h1>
@@ -32,7 +14,7 @@
             <div class="container m-xs-b-4">
                 <div class="alert alert-danger">
                     <h2 class="text-base text-danger wt-bold m-xs-b-2">
-                        There {{ $errors->count() == 1 ? 'is' : 'are' }} {{ $errors->count() }} {{ str_plural('error', $errors->count() )}}
+                        There {{ $errors->count() === 1 ? 'is' : 'are' }} {{ $errors->count() }} {{ str_plural('error', $errors->count() )}}
                         with this concert:
                     </h2>
                     <ul class="bullet-list text-danger">
@@ -215,11 +197,4 @@
             <button type="submit" class="btn btn-primary">Save Changes</button>
         </div>
     </form>
-
-
-    <footer class="p-xs-y-6 text-light-muted">
-        <div class="container">
-            <p class="text-center">&copy; TicketBeast {{ date('Y') }}</p>
-        </div>
-    </footer>
 @endsection

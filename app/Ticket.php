@@ -22,6 +22,11 @@ class Ticket extends Model
         return $query->whereNull('order_id')->whereNull('reserved_at');
     }
 
+    public function scopeSold(Builder $query)
+    {
+        return $query->whereNotNull('order_id');
+    }
+
     public function release(): void
     {
         $this->update(['reserved_at' => null]);
