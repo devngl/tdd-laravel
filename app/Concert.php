@@ -6,7 +6,6 @@ use App\Exceptions\NotEnoughTicketsException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Collection;
@@ -44,6 +43,11 @@ class Concert extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function attendeeMessages(): HasMany
+    {
+        return $this->hasMany(AttendeeMessage::class);
     }
 
     public function hasOrderFor(string $email): Bool

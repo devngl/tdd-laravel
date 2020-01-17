@@ -4,30 +4,14 @@ declare(strict_types = 1);
 
 namespace Tests\Feature\Backstage;
 
-use App\Concert;
 use App\User;
-use Illuminate\Foundation\Testing\Assert;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
-use Illuminate\Support\Collection;
 use Tests\Helpers\ConcertFactory;
 use Tests\TestCase;
 
 final class ViewConcertListTest extends TestCase
 {
     use DatabaseMigrations;
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        Collection::macro('assertEquals', function (array $items) {
-            Assert::assertCount(count($this), $items);
-            $this->zip($items)->each(static function ($pair) {
-                [$a, $b] = $pair;
-                Assert::assertTrue($a->is($b));
-            });
-        });
-    }
 
     /** @test */
     public function guests_cannot_view_promoters_concert_list(): void

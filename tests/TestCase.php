@@ -2,7 +2,7 @@
 
 namespace Tests;
 
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Foundation\Testing\Assert;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Illuminate\Foundation\Testing\TestResponse;
@@ -22,13 +22,22 @@ abstract class TestCase extends BaseTestCase
             return $this->viewData($key);
         });
 
-        Collection::macro('assertContains', function ($value) {
+        EloquentCollection::macro('assertContains', function ($value) {
             Assert::assertTrue($this->contains($value),
                 'Failed asserting that the collection has the specified value.');
         });
-        Collection::macro('assertNotContains', function ($value) {
+
+        EloquentCollection::macro('assertNotContains', function ($value) {
             Assert::assertFalse($this->contains($value),
                 'Failed asserting that the collection doesnt have the specified value.');
+        });
+
+        EloquentCollection::macro('assertEquals', function (array $items) {
+            Assert::assertCount(count($this), $items);
+            $this->zip($items)->each(static function ($pair) {
+                [$a, $b] = $pair;
+                Assert::assertTrue($a->is($b));
+            });
         });
 
         Mockery::getConfiguration()->allowMockingNonExistentMethods(false);

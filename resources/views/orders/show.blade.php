@@ -69,7 +69,7 @@
                         </div>
                         <div class="card-section flex-baseline flex-spaced">
                             <p class="text-lg">{{ $ticket->code }}</p>
-                            <p>adam.wathan@example.com</p>
+                            <p>{{ $order->email }}</p>
                         </div>
                     </div>
                     @endforeach

@@ -13,8 +13,11 @@
                 </h1>
                 <div class="text-base">
                     <a href="{{ route('backstage.published-concert-orders.index', $concert) }}"
-                       class="wt-bold inline-block">
+                       class="wt-bold inline-block m-xs-r-4">
                         Orders
+                    </a>
+                    <a href="{{ route('backstage.concert-messages.new', $concert) }}" class="inline-block">
+                        Message Attendees
                     </a>
                 </div>
             </div>
@@ -57,6 +60,38 @@
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-section">
+                    @if ($orders->isEmpty())
+                        <div class="text-center">
+                            No orders yet.
+                        </div>
+                    @else
+                        <table class="table">
+                            <thead>
+                            <tr>
+                                <th class="text-left">Email</th>
+                                <th class="text-left">Tickets</th>
+                                <th class="text-left">Amount</th>
+                                <th class="text-left">Card</th>
+                                <th class="text-left">Purchased</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            @foreach($orders as $order)
+                                <tr>
+                                    <td>{{ $order->email  }}</td>
+                                    <td>{{ $order->ticketQuantity() }}</td>
+                                    <td>{{ number_format($order->amount / 100, 2) }}</td>
+                                    <td><span class="text-dark-soft">****</span> {{ $order->card_last_four }}</td>
+                                    <td class="text-dark-soft">{{ $order->created_at->format('M j, Y @ g:ia') }}</td>
+                                </tr>
+                            @endforeach
+                            </tbody>
+                        </table>
+                    @endif
                 </div>
             </div>
         </div>
