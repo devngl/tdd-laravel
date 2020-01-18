@@ -5,10 +5,14 @@ declare(strict_types = 1);
 namespace Tests\Feature\Backstage;
 
 use App\Concert;
+use App\Events\ConcertAdded;
 use App\User;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Http\Response;
+use Illuminate\Http\Testing\File;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 final class AddConcertTest extends TestCase
@@ -316,6 +320,109 @@ final class AddConcertTest extends TestCase
         $response->assertRedirect('/backstage/concerts/new');
         $response->assertSessionHasErrors('ticket_quantity');
         $this->assertEquals(0, Concert::count());
+    }
+
+    /** @test */
+    public function poster_image_must_be_an_image(): void
+    {
+        Storage::fake('public');
+
+        $user = factory(User::class)->create();
+        $file = File::create('not-a-poster.pdf');
+
+        $response = $this->actingAs($user)->from('/backstage/concerts/new')->post('/backstage/concerts',
+            $this->validParams([
+                'poster_image' => $file,
+            ]));
+        $response->assertRedirect('/backstage/concerts/new');
+        $response->assertSessionHasErrors('poster_image');
+        $this->assertEquals(0, Concert::count());
+    }
+
+    /** @test */
+    public function poster_image_must_be_at_least_600px_wide(): void
+    {
+        Storage::fake('public');
+
+        $user = factory(User::class)->create();
+        $file = File::image('poster.png', 599, 775);
+
+        $response = $this->actingAs($user)->from('/backstage/concerts/new')->post('/backstage/concerts',
+            $this->validParams([
+                'poster_image' => $file,
+            ]));
+        $response->assertRedirect('/backstage/concerts/new');
+        $response->assertSessionHasErrors('poster_image');
+        $this->assertEquals(0, Concert::count());
+    }
+
+    /** @test */
+    public function poster_image_must_have_letter_aspect_ratio(): void
+    {
+        Storage::fake('public');
+
+        $user = factory(User::class)->create();
+        $file = File::image('poster.png', 851, 1100);
+
+        $response = $this->actingAs($user)->from('/backstage/concerts/new')->post('/backstage/concerts',
+            $this->validParams([
+                'poster_image' => $file,
+            ]));
+
+        $response->assertRedirect('/backstage/concerts/new');
+        $response->assertSessionHasErrors('poster_image');
+        $this->assertEquals(0, Concert::count());
+    }
+
+    /** @test */
+    public function poster_image_is_uploaded_if_included(): void
+    {
+        Storage::fake('public');
+
+        $user = factory(User::class)->create();
+        $file = File::image('concert-poster.png', 850, 1100);
+
+        $this->actingAs($user)->post('/backstage/concerts', $this->validParams([
+            'poster_image' => $file,
+        ]));
+
+        tap(Concert::first(), function (Concert $concert) use ($file) {
+            $this->assertNotNull($concert->poster_image_path);
+            Storage::disk('public')->assertExists($concert->poster_image_path);
+            $this->assertFileEquals($file->getPathname(), Storage::disk('public')->path($concert->poster_image_path));
+        });
+    }
+
+    /** @test */
+    public function poster_image_is_optional(): void
+    {
+        $user = factory(User::class)->create();
+
+        $response = $this->actingAs($user)->post('/backstage/concerts', $this->validParams([
+            'poster_image' => null,
+        ]));
+
+        tap(Concert::first(), function (Concert $concert) use ($user, $response) {
+            $response->assertRedirect('/backstage/concerts');
+            $this->assertTrue($concert->user->is($user));
+            $this->assertNull($concert->poster_image_path);
+        });
+    }
+
+    /** @test */
+    public function event_is_fired_when_a_concert_is_created(): void
+    {
+        Event::fake([ConcertAdded::class]);
+
+        $user = factory(User::class)->create();
+
+        $this->actingAs($user)->post('/backstage/concerts', $this->validParams());
+
+        Event::assertDispatched(ConcertAdded::class, function (ConcertAdded $event) {
+            $concert = Concert::firstOrFail();
+
+            return $event->concert->is($concert);
+        });
     }
 
     private function validParams(array $overrides = []): array

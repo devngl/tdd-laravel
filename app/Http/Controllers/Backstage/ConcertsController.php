@@ -5,17 +5,19 @@ declare(strict_types = 1);
 namespace App\Http\Controllers\Backstage;
 
 use App\Concert;
+use App\Events\ConcertAdded;
 use App\Http\Controllers\Controller;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 final class ConcertsController extends Controller
 {
     public function index()
     {
         return view('backstage.concerts.index', [
-            'publishedConcerts' => Auth::user()->concerts->filter->isPublished(),
+            'publishedConcerts'   => Auth::user()->concerts->filter->isPublished(),
             'unpublishedConcerts' => Auth::user()->concerts->reject->isPublished(),
         ]);
     }
@@ -38,6 +40,7 @@ final class ConcertsController extends Controller
             'zip'             => ['required'],
             'ticket_price'    => ['required', 'numeric', 'min:5'],
             'ticket_quantity' => ['required', 'numeric', 'min:1'],
+            'poster_image'    => ['nullable', 'image', Rule::dimensions()->minWidth(600)->ratio(8.5/11)],
         ]);
 
         $concert = Auth::user()->concerts()->create([
@@ -55,7 +58,10 @@ final class ConcertsController extends Controller
             ])),
             'ticket_price'           => $request->get('ticket_price') * 100,
             'ticket_quantity'        => (int)$request->get('ticket_quantity'),
+            'poster_image_path'      => $request->file('poster_image', optional())->store('posters', 'public'),
         ]);
+
+        ConcertAdded::dispatch($concert);
 
         return redirect()->route('backstage.concerts.index');
     }
