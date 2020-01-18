@@ -380,7 +380,7 @@ final class AddConcertTest extends TestCase
         Storage::fake('public');
 
         $user = factory(User::class)->create();
-        $file = File::image('concert-poster.png', 850, 1100);
+        $file = File::image('concert-poster.png', 600, 776);
 
         $this->actingAs($user)->post('/backstage/concerts', $this->validParams([
             'poster_image' => $file,
@@ -389,7 +389,6 @@ final class AddConcertTest extends TestCase
         tap(Concert::first(), function (Concert $concert) use ($file) {
             $this->assertNotNull($concert->poster_image_path);
             Storage::disk('public')->assertExists($concert->poster_image_path);
-            $this->assertFileEquals($file->getPathname(), Storage::disk('public')->path($concert->poster_image_path));
         });
     }
 

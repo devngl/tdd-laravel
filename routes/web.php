@@ -24,3 +24,7 @@ Route::group(['middleware' => 'auth', 'prefix' => 'backstage', 'namespace' => 'B
     Route::post('/concerts/{id}/messages', 'ConcertMessagesController@store')
         ->name('backstage.concert-messages.store');
 });
+
+Route::get('/invitations/{code}', 'InvitationsController@show')->name('invitations.show');
+
+Route::post('/register', 'Auth\RegisterController@register')->name('auth.register');

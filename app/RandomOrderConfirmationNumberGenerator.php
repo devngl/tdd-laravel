@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 namespace App;
 
-class RandomOrderConfirmationNumberGenerator implements OrderConfirmationNumberGenerator
+class RandomOrderConfirmationNumberGenerator implements OrderConfirmationNumberGenerator, InvitationCodeGenerator
 {
     public function generate(): string
     {
