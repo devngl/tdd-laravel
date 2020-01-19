@@ -23,18 +23,23 @@ final class StripePaymentGateway implements PaymentGateway
         $this->apiKey = $apiKey;
     }
 
-    public function charge(int $amount, string $token): Charge
+    public function charge(int $amount, string $token, string $destinationAccountId): Charge
     {
         try {
             $stripeCharge = StripeCharge::create([
-                'amount'   => $amount,
-                'currency' => 'eur',
-                'source'   => $token,
+                'amount'      => $amount,
+                'currency'    => 'eur',
+                'source'      => $token,
+                'destination' => [
+                    'account' => $destinationAccountId,
+                    'amount'  => $amount * .9,
+                ],
             ], ['api_key' => $this->apiKey]);
 
             return new Charge([
                 'card_last_four' => $stripeCharge['source']['last4'],
                 'amount'         => $stripeCharge['amount'],
+                'destination'    => $destinationAccountId,
             ]);
         } catch (InvalidRequestException $e) {
             throw new PaymentFailedException(Response::HTTP_UNPROCESSABLE_ENTITY);

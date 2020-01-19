@@ -17,7 +17,8 @@ trait PaymentGatewayContractTest
 
         /** @var Collection $newCharges */
         $newCharges = $paymentGateway->newChargesDuring(static function (PaymentGateway $paymentGateway) {
-            $paymentGateway->charge(50, $paymentGateway->getValidTestToken('4242424242424242'));
+            $paymentGateway->charge(50, $paymentGateway->getValidTestToken('4242424242424242'),
+                env('STRIPE_TEST_PROMOTER_ID'));
         });
 
         $this->assertCount(1, $newCharges);
@@ -29,13 +30,13 @@ trait PaymentGatewayContractTest
     {
         /** @var PaymentGateway $paymentGateway */
         $paymentGateway = $this->getPaymentGateway();
-        $paymentGateway->charge(2000, $paymentGateway->getValidTestToken());
-        $paymentGateway->charge(3000, $paymentGateway->getValidTestToken());
+        $paymentGateway->charge(2000, $paymentGateway->getValidTestToken(), env('STRIPE_TEST_PROMOTER_ID'));
+        $paymentGateway->charge(3000, $paymentGateway->getValidTestToken(), env('STRIPE_TEST_PROMOTER_ID'));
 
         /** @var Collection $newCharges */
         $newCharges = $paymentGateway->newChargesDuring(static function (PaymentGateway $paymentGateway) {
-            $paymentGateway->charge(4000, $paymentGateway->getValidTestToken());
-            $paymentGateway->charge(5000, $paymentGateway->getValidTestToken());
+            $paymentGateway->charge(4000, $paymentGateway->getValidTestToken(), env('STRIPE_TEST_PROMOTER_ID'));
+            $paymentGateway->charge(5000, $paymentGateway->getValidTestToken(), env('STRIPE_TEST_PROMOTER_ID'));
         });
 
         $this->assertCount(2, $newCharges);
@@ -49,7 +50,7 @@ trait PaymentGatewayContractTest
 
         $newCharges = $paymentGateway->newChargesDuring(static function (PaymentGateway $paymentGateway) {
             try {
-                $paymentGateway->charge(2500, 'invalid-payment-token');
+                $paymentGateway->charge(2500, 'invalid-payment-token', env('STRIPE_TEST_PROMOTER_ID'));
             } catch (PaymentFailedException $e) {
                 return;
             }
@@ -66,9 +67,14 @@ trait PaymentGatewayContractTest
         $paymentGateway = $this->getPaymentGateway();
 
         /** @var Charge $charge */
-        $charge = $paymentGateway->charge(2500, $paymentGateway->getValidTestToken($paymentGateway::TEST_CARD_NUMBER));
+        $charge = $paymentGateway->charge(
+            2500,
+            $paymentGateway->getValidTestToken($paymentGateway::TEST_CARD_NUMBER),
+            env('STRIPE_TEST_PROMOTER_ID')
+        );
 
         $this->assertEquals(substr($paymentGateway::TEST_CARD_NUMBER, -4), $charge->cardLastFour());
         $this->assertEquals(2500, $charge->amount());
+        $this->assertEquals(env('STRIPE_TEST_PROMOTER_ID'), $charge->destination());
     }
 }

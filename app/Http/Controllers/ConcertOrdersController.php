@@ -37,7 +37,8 @@ class ConcertOrdersController extends Controller
         $reservation    = $concert->reserveTickets($ticketQuantity, $request->get('email'));
 
         try {
-            $order = $reservation->complete($this->paymentGateway, $request->get('payment_token'));
+            $order = $reservation->complete($this->paymentGateway, $request->get('payment_token'),
+                $concert->user->stripe_account_id);
         } catch (PaymentFailedException $e) {
             $reservation->cancel();
             throw $e;
