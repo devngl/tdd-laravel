@@ -12,7 +12,7 @@ class User extends Authenticatable
     use Notifiable;
 
     protected $fillable = [
-        'name', 'email', 'password',
+        'name', 'email', 'password', 'stripe_account_id', 'stripe_access_token'
     ];
 
     protected $hidden = [
