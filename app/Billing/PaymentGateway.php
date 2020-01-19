@@ -6,5 +6,5 @@ interface PaymentGateway
 {
     public function charge(int $amount, string $token, string $destinationAccountId): Charge;
 
-    public function getValidTestToken(string $cardNumber): string;
+    public function getValidTestToken(?string $cardNumber): string;
 }

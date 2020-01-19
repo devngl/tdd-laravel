@@ -23,7 +23,7 @@ class FakePaymentGateway implements PaymentGateway
         $this->beforeFirstChargeCallback = null;
     }
 
-    public function getValidTestToken(string $cardNumber = null): string
+    public function getValidTestToken(?string $cardNumber = null): string
     {
         $token                = 'fake-tok_'.Str::random(24);
         $this->tokens[$token] = $cardNumber;

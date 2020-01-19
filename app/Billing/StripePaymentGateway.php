@@ -46,7 +46,7 @@ final class StripePaymentGateway implements PaymentGateway
         }
     }
 
-    public function getValidTestToken(string $cardNumber = self::TEST_CARD_NUMBER): string
+    public function getValidTestToken(?string $cardNumber = self::TEST_CARD_NUMBER): string
     {
         return Token::create([
             'card' => [
